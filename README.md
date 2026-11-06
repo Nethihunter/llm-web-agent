@@ -368,4 +368,4 @@ Self-taught software engineer, 14+ years of freelance experience.
 Python · JavaScript · Linux · AI-assisted development.
 
 - LinkedIn: [tompoheriala-andriamanamisaina-10316b192](https://www.linkedin.com/in/tompoheriala-andriamanamisaina-10316b192/)
-- Email: herysyfabay@gmail.com
+- Email: herysyfaby@gmail.com
