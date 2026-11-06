@@ -1,0 +1,28 @@
+[project]
+name = "llm-web-agent"
+version = "1.0.0"
+description = "A supervised LLM-driven browser agent with strict validation and workflow caching"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [
+    { name = "Tompoherilala Andriamanamisaina", email = "herysyfabay@gmail.com" }
+]
+
+[tool.ruff]
+line-length = 88
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "N", "UP", "B", "C4", "SIM"]
+
+[tool.mypy]
+python_version = "3.11"
+warn_return_any = true
+warn_unused_configs = true
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
+addopts = "-v --cov=. --cov-report=term-missing"

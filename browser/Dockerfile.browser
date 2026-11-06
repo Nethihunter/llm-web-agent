@@ -1,0 +1,51 @@
+# Browser container: Chrome (non-headless) + Xvfb + x11vnc + noVNC + socat.
+#
+# Why not headless:
+#   When the LLM goes off the rails, a human needs to see what's
+#   happening. Headless Chrome hides everything. This image exposes
+#   a VNC stream (noVNC on 6080) so the operator can watch.
+#
+# Why socat:
+#   Chrome's DevTools port only listens on 127.0.0.1 (the
+#   --remote-debugging-address flag is ignored). socat forwards
+#   0.0.0.0:9222 to Chrome's loopback port 9223 so that other containers
+#   (and Docker's published ports) can reach it.
+#
+# Why no --privileged:
+#   Chrome + VNC do not need device access or kernel capabilities.
+#   --shm-size=2g (set in compose) is enough.
+
+FROM debian:12-slim
+
+ENV DEBIAN_FRONTEND=noninteractive
+ENV DISPLAY=:99
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        ca-certificates curl gnupg socat \
+        libnss3 libatk1.0-0 libatk-bridge2.0-0 libcups2 libdrm2 \
+        libxkbcommon0 libxcomposite1 libxdamage1 libxfixes3 libxrandr2 \
+        libgbm1 libpango-1.0-0 libcairo2 libasound2 \
+        fonts-liberation \
+        xvfb x11vnc fluxbox xauth \
+        novnc websockify \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Chrome (stable)
+RUN curl -fsSL https://dl-ssl.google.com/linux/linux_signing_key.pub \
+        | gpg --dearmor -o /usr/share/keyrings/google-chrome.gpg \
+    && echo "deb [arch=amd64 signed-by=/usr/share/keyrings/google-chrome.gpg] http://dl.google.com/linux/chrome/deb/ stable main" \
+        > /etc/apt/sources.list.d/google-chrome.list \
+    && apt-get update \
+    && apt-get install -y --no-install-recommends google-chrome-stable \
+    && rm -rf /var/lib/apt/lists/*
+
+# Non-root user
+RUN useradd -m -u 1000 -s /bin/bash chrome
+USER chrome
+WORKDIR /home/chrome
+
+COPY --chown=chrome:chrome start-chrome.sh /home/chrome/start-chrome.sh
+RUN chmod +x /home/chrome/start-chrome.sh
+
+EXPOSE 9222 5900 6080
+CMD ["/home/chrome/start-chrome.sh"]

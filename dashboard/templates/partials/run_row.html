@@ -1,0 +1,22 @@
+<tr>
+    <td class="text-muted">{{ run.started_at }}</td>
+    <td><strong>{{ run.domain }}</strong></td>
+    <td>{{ run.task or "—" }}</td>
+    <td><span class="badge">{{ run.mode }}</span></td>
+    <td>
+        {% if run.status == "success" %}
+            <span class="text-green-600">✓ success</span>
+        {% elif run.status == "failed" %}
+            <span class="text-red-600">✗ failed</span>
+        {% else %}
+            <span class="text-muted">{{ run.status }}</span>
+        {% endif %}
+    </td>
+    <td>{{ run.steps }}</td>
+    <td>{{ run.llm_calls }}</td>
+    <td>{{ run.tokens_in }}</td>
+    <td>{{ run.tokens_out }}</td>
+    <td class="text-muted truncate" title="{{ run.error or '' }}">
+        {{ run.error or "—" }}
+    </td>
+</tr>

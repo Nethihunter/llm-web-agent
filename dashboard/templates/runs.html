@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block title %}Runs — LLM Web Agent{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Runs</h1>
+    <span class="badge">{{ runs|length }} total</span>
+</div>
+
+{% if not runs %}
+    <div class="empty-state">
+        <p>No runs yet.</p>
+        <p>Run a task to populate the history:</p>
+        <code>python3 run.py --task saucedemo_checkout --yes</code>
+    </div>
+{% else %}
+    <div class="table-wrapper">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Time</th>
+                    <th>Domain</th>
+                    <th>Task</th>
+                    <th>Mode</th>
+                    <th>Status</th>
+                    <th>Steps</th>
+                    <th>LLM Calls</th>
+                    <th>Tokens In</th>
+                    <th>Tokens Out</th>
+                    <th>Error</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for run in runs %}
+                    {% include "partials/run_row.html" %}
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endif %}
+{% endblock %}

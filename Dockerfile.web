@@ -1,0 +1,31 @@
+# Web server image (FastAPI + dashboard).
+# Does not include Chrome — see browser/Dockerfile.browser.
+# The web service connects to the browser service via CDP.
+
+FROM python:3.11-slim
+
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1
+
+WORKDIR /app
+
+# System deps for lxml, psycopg2, etc.
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        gcc libxml2-dev libxslt1-dev libpq-dev curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Python deps
+COPY requirements.txt requirements-server.txt ./
+RUN pip install --no-cache-dir -r requirements-server.txt
+
+# Copy the app
+COPY . .
+
+# Non-root user
+RUN useradd -m -u 1000 app && chown -R app:app /app
+USER app
+
+EXPOSE 8000
+
+# Default command: run the dashboard
+CMD ["uvicorn", "api:app", "--host", "0.0.0.0", "--port", "8000"]

@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block title %}{{ workflow.name }} — {{ domain }}{% endblock %}
+
+{% block content %}
+<nav class="breadcrumb">
+    <a href="/dashboard/workflows">Workflows</a> /
+    <span>{{ domain }} / {{ workflow.name }}</span>
+</nav>
+
+<h1>{{ workflow.name }}</h1>
+<p class="text-muted">{{ workflow.goal }}</p>
+
+<div class="info-grid">
+    <div><strong>Domain:</strong> {{ domain }}</div>
+    <div><strong>Steps:</strong> {{ workflow.steps|length }}</div>
+    <div><strong>Success indicator:</strong> <code>{{ workflow.success_indicator }}</code></div>
+</div>
+
+<h2>Steps</h2>
+<div class="table-wrapper">
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Action</th>
+                <th>Selector</th>
+                <th>Value template</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for step in workflow.steps %}
+            <tr>
+                <td>{{ step.order }}</td>
+                <td><span class="badge badge-{{ step.action }}">{{ step.action }}</span></td>
+                <td><code>{{ step.selector }}</code></td>
+                <td>{% if step.value_template %}<code>{{ step.value_template }}</code>{% else %}—{% endif %}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<div class="actions-bar">
+    <button class="btn btn-primary"
+            hx-post="/dashboard/workflows/{{ domain }}/{{ workflow.name }}/run"
+            hx-target="this"
+            hx-swap="outerHTML">
+        ▶ Run this workflow
+    </button>
+    <a href="/dashboard/workflows" class="btn">← Back</a>
+</div>
+{% endblock %}

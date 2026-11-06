@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+
+{% block title %}Overview — LLM Web Agent{% endblock %}
+
+{% block content %}
+<h1>Overview</h1>
+
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-label">Domains</div>
+        <div class="stat-value">{{ stats.total_domains }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Workflows</div>
+        <div class="stat-value">{{ stats.total_workflows }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Total Runs</div>
+        <div class="stat-value">{{ stats.total_runs }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Success Rate</div>
+        <div class="stat-value">{{ stats.success_rate }}%</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">LLM Calls Saved</div>
+        <div class="stat-value">{{ stats.cache_savings }}</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-label">Total Cost</div>
+        <div class="stat-value">${{ stats.total_cost }}</div>
+    </div>
+</div>
+
+<!-- Real-time charts -->
+<div class="charts-grid">
+    <div class="chart-card">
+        <h3>Runs (last 24h)</h3>
+        <canvas id="runs-chart"
+                hx-get="/dashboard/api/chart/runs"
+                hx-trigger="load, every 30s"
+                hx-swap="none"></canvas>
+    </div>
+    <div class="chart-card">
+        <h3>Tokens (last 24h)</h3>
+        <canvas id="tokens-chart"
+                hx-get="/dashboard/api/chart/tokens"
+                hx-trigger="load, every 30s"
+                hx-swap="none"></canvas>
+    </div>
+</div>
+
+<h2>Recent Runs</h2>
+<div class="table-wrapper">
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Time</th><th>Domain</th><th>Task</th><th>Mode</th>
+                <th>Status</th><th>Steps</th><th>LLM Calls</th>
+                <th>Tokens In</th><th>Tokens Out</th><th>Error</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for run in runs %}
+                {% include "partials/run_row.html" %}
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<script src="/static/chart.min.js" defer></script>
+<script>
+document.addEventListener("htmx:afterRequest", (e) => {
+    const el = e.detail.elt;
+    if (el.id === "runs-chart") {
+        const data = JSON.parse(e.detail.xhr.responseText);
+        renderChart("runs-chart", data, ["total", "success"]);
+    } else if (el.id === "tokens-chart") {
+        const data = JSON.parse(e.detail.xhr.responseText);
+        renderChart("tokens-chart", data, ["tin", "tout"]);
+    }
+});
+
+function renderChart(id, data, fields) {
+    const labels = data.map(d => d.hour.slice(-8));  // HH:00
+    const colors = { total: "#3b82f6", success: "#10b981",
+                     tin: "#8b5cf6", tout: "#ef4444" };
+    const datasets = fields.map(f => ({
+        label: f,
+        data: data.map(d => d[f] || 0),
+        borderColor: colors[f],
+        backgroundColor: colors[f] + "22",
+        tension: 0.3,
+        fill: true,
+    }));
+
+    const ctx = document.getElementById(id).getContext("2d");
+    if (window[id + "_instance"]) window[id + "_instance"].destroy();
+    window[id + "_instance"] = new Chart(ctx, {
+        type: "line",
+        data: { labels, datasets },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { labels: { color: "#94a3b8" } } },
+            scales: {
+                x: { ticks: { color: "#94a3b8" }, grid: { color: "#33415533" } },
+                y: { ticks: { color: "#94a3b8" }, grid: { color: "#33415533" } },
+            },
+        },
+    });
+}
+</script>
+{% endblock %}

@@ -1,0 +1,24 @@
+<tr id="wf-{{ row.hostname }}-{{ row.name }}">
+    <td><strong>{{ row.hostname }}</strong></td>
+    <td>{{ row.name }}</td>
+    <td class="truncate" title="{{ row.goal }}">{{ row.goal[:60] }}...</td>
+    <td>{{ row.use_count }}</td>
+    <td class="text-muted">{{ row.last_used_at or "Never" }}</td>
+    <td class="actions">
+        <a href="/dashboard/workflows/{{ row.hostname }}/{{ row.name }}"
+           class="btn btn-sm">View</a>
+        <button class="btn btn-sm btn-primary"
+                hx-post="/dashboard/workflows/{{ row.hostname }}/{{ row.name }}/run"
+                hx-target="this"
+                hx-swap="outerHTML">
+            ▶ Run
+        </button>
+        <button class="btn btn-sm btn-danger"
+                hx-delete="/dashboard/workflows/{{ row.hostname }}/{{ row.name }}"
+                hx-target="closest tr"
+                hx-swap="outerHTML"
+                hx-confirm="Delete this workflow?">
+            ✗
+        </button>
+    </td>
+</tr>

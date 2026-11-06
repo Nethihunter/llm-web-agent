@@ -1,0 +1,40 @@
+# Secrets
+key.json
+.env
+*.pem
+
+# Runtime data
+workflows.db
+runs.db
+*.log
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# IDE
+.vscode/
+.idea/
+.DS_Store
+
+# OS
+Thumbs.db
+desktop.ini
+
+# Docker
+.docker/
+
+# Local setup and backups
+*.bak
+generate_tree.py
+setup_ssh_github.sh
+Tree.txt
+uses_agent_ssh.sh
+apply_manual_fixes.py
+temp_context.txt

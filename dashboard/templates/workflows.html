@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block title %}Workflows — LLM Web Agent{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Workflows</h1>
+    <span class="badge">{{ workflows|length }} cached</span>
+</div>
+
+{% if not workflows %}
+    <div class="empty-state">
+        <p>No workflows yet.</p>
+        <p>Run a demo to populate the cache:</p>
+        <code>python3 run.py --task saucedemo_checkout --yes</code>
+    </div>
+{% else %}
+    <div class="table-wrapper">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Domain</th>
+                    <th>Name</th>
+                    <th>Goal</th>
+                    <th>Uses</th>
+                    <th>Last Used</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in workflows %}
+                    {% include "partials/workflow_row.html" %}
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endif %}
+{% endblock %}

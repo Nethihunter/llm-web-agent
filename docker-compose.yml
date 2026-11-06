@@ -1,0 +1,88 @@
+# Full stack:
+# - web     : FastAPI + dashboard (port 8000)
+# - browser : Chrome + VNC + noVNC (ports 9222, 5900, 6080)
+# - postgres: workflow storage (port 5432, localhost only)
+#
+# Usage:
+#   cp .env.example .env     # set POSTGRES_PASSWORD
+#   docker compose up -d --build
+#   Open http://localhost:8000/dashboard
+#   Open http://localhost:6080/vnc.html (live Chrome view)
+#   docker compose down
+
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.web
+    container_name: llm-web-agent-web
+    ports:
+      - "127.0.0.1:8000:8000"
+    volumes:
+      - ./key.json:/app/key.json:ro
+    environment:
+      - BROWSER_CDP_URL=http://browser:9222
+      - DB_BACKEND=postgres
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=agent
+      - POSTGRES_USER=agent
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-agent_dev_password}
+      - PYTHONUNBUFFERED=1
+    depends_on:
+      browser:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+
+  browser:
+    build:
+      context: ./browser
+      dockerfile: Dockerfile.browser
+    container_name: llm-web-agent-browser
+    init: true            # reaps the zombie processes (Xvfb, fluxbox, ...)
+    shm_size: 2g
+    mem_limit: 2g
+    cpus: 2.0
+    ports:
+      - "127.0.0.1:9222:9222"   # CDP (Playwright)
+      - "127.0.0.1:5900:5900"   # native VNC (vncviewer)
+      - "127.0.0.1:6080:6080"   # noVNC (web browser)
+    healthcheck:
+      # Goes through socat (0.0.0.0:9222 -> Chrome on 9223), so it only turns
+      # healthy when other containers can really reach the CDP port.
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:9222/json/version"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: llm-web-agent-postgres
+    environment:
+      POSTGRES_DB: agent
+      POSTGRES_USER: agent
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-agent_dev_password}
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    mem_limit: 512m
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U agent -d agent"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+
+volumes:
+  pg_data: {}
