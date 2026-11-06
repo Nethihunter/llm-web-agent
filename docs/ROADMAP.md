@@ -5,102 +5,85 @@ clear goal and a defined scope. No version is delayed to add more features.
 
 ---
 
-## v1.0 — Core agent (current)
+## v1.0 — Core agent (✅ Shipped)
 
-**Status**: in development.
-
-**Goal**: a working agent with strict validation, workflow caching, and
+**Goal**: A working agent with strict validation, workflow caching, and
 three demo tasks.
 
-**Included**:
+**Implemented**:
 
 - `agent.py` with discovery and replay modes
 - Multi-provider LLM support (DeepSeek, OpenAI, Anthropic, Grok)
-- Three-layer validation
-- HTML reduction with iframe extraction
-- SQLite workflow cache
-- Docker browser isolation (optional)
+- Three-layer validation (`validator.py`, `validator_dynamic.py`, post-check)
+- HTML reduction with iframe extraction (`html_processor.py`)
+- SQLite workflow cache (`workflow_manager.py`)
+- Docker browser isolation (optional, `--browser container`)
 - Three demo tasks (Saucedemo, Booking, Wikipedia)
 - CLI (`run.py`) with `--task` presets
-- Full documentation (this folder)
-- Benchmark run on the demo tasks, to replace the *target* metrics in the
-  README with measured values
-
-**Not included**:
-
-- Web dashboard
-- REST API
-- Postgres backend
-- Local LLM (Phi-3)
-- Tests beyond the essential
+- Full documentation (`docs/` folder)
+- One-line installation script for Linux (`scripts/install.sh`)
 
 ---
 
-## v1.1 — Web dashboard and API (2 weeks after v1.0)
+## v1.1 — Web dashboard and API (✅ Shipped)
 
-**Goal**: make the project visible and demoable without a terminal.
+**Goal**: Make the project visible and demoable without a terminal.
 
-**Added**:
+**Implemented**:
 
 - `api.py` (FastAPI)
-- `dashboard/` with HTMX + Jinja2
-  - Overview page (stats, recent runs)
-  - Workflows list
-  - Workflow details (steps, selectors)
+- `dashboard/` with HTMX + Jinja2 (no build step, no Node.js)
+  - Overview page (stats, recent runs, charts)
+  - Workflows list, details, and delete actions
   - Runs history
   - "Run" button (background task)
-  - "Delete" button
 - REST API (`/api/*`)
 - OpenAPI docs at `/docs` (free with FastAPI)
-- Postgres backend (`--backend postgres`)
-- Migration script (`migrate_sqlite_to_pg.py`)
-- Screenshot in README
+- Postgres backend (via `DB_BACKEND=postgres` env var)
+- Live Chrome view via noVNC (`http://localhost:6080`)
 
-**Documentation updates**:
-
-- `ARCHITECTURE.md`: ADR-002 (FastAPI) and ADR-005 (HTMX) become "Implemented"
-- `USAGE.md`: dashboard section
-- New `README.md` section: "Dashboard"
+**Documentation updates (done)**:
+- `ARCHITECTURE.md`: ADR-002 (FastAPI) and ADR-005 (HTMX) marked as "Implemented"
+- `USAGE.md`: dashboard section added
+- `README.md`: dashboard section added
 
 ---
 
-## v1.2 — Local LLM and polish (4 weeks after v1.1)
+## v1.2 — Local LLM and Polish (🚧 In Progress)
 
-**Goal**: demonstrate graceful degradation — the agent works even with no
-LLM API.
+**Goal**: Demonstrate graceful degradation — the agent works even with no
+LLM API (or no internet connection for planning).
 
-**Added**:
+**Planned**:
 
-- `local_llm.py` (Phi-3 Mini Q4 via `llama-cpp-python`)
-- `--validate-locally` flag: use the local 3B model for selector validation
-  (not for planning)
-- Benchmark script: latency, memory, agreement rate vs cloud providers
-- Tests: full unit test suite (validators, workflow manager, HTML processor)
+- `llm/ollama.py` implementation (Qwen 3 or Phi-3 via local Ollama)
+- `--validate-locally` flag: use a local 3B model for selector validation
+  (not for planning), saving cloud API calls.
+- Benchmark script: latency, memory, and agreement rate vs cloud providers.
+- Complete the test suite (`tests/` for LLM providers and agent logic).
 - Dashboard improvements:
   - "New task" form (launch discovery mode from the UI)
-  - Stats charts (success rate over time, cost over time)
-  - Dark/light theme toggle
+  - Theme toggle (Dark/Light)
 
 **Documentation updates**:
-
 - `LLM_PROVIDERS.md`: Ollama section with CPU-only benchmarks
 - `ARCHITECTURE.md`: ADR-006 (local LLM for validation)
-- New `docs/BENCHMARKS.md`
+- New `docs/BENCHMARKS.md` with measured metrics (replacing the *targets*
+  from the README).
 
 ---
 
-## v1.3 — Community and packaging (6 weeks after v1.2)
+## v1.3 — Community and Packaging (📅 Planned)
 
-**Goal**: make the project easy to install and contribute to.
+**Goal**: Make the project easy to install, run in CI, and contribute to.
 
-**Added**:
+**Planned**:
 
 - Published on PyPI (`pip install llm-web-agent`)
-- GitHub Actions CI (tests + lint + type check)
-- Docker image on Docker Hub
-- `CONTRIBUTING.md`
-- `CHANGELOG.md`
-- More tasks (example: LinkedIn profile extraction, GitHub repo search)
+- GitHub Actions CI (tests + `ruff` lint + `mypy` type check)
+- Pre-built Docker image on Docker Hub
+- `CONTRIBUTING.md` and `CHANGELOG.md`
+- More demo tasks (e.g., GitHub search, structured data extraction)
 
 ---
 
