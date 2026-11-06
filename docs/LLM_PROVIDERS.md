@@ -8,17 +8,25 @@ not a code change.
 
 ## Comparison
 
+Prices are in USD per 1M tokens (indicative, based on provider docs).
+Model names change often; check each provider's documentation.
+
 | Provider | Model | Input $/1M | Output $/1M | EU access | Notes |
 |---|---|---|---|---|---|
-| **DeepSeek** | deepseek-chat | $0.14 | $0.28 | ⚠️ Check compliance | Cheapest. Default for development. |
-| **OpenAI** | gpt-4o-mini | $0.15 | $0.60 | ✅ | Wide availability. |
-| **OpenAI** | gpt-4o | $2.50 | $10.00 | ✅ | Higher quality, higher cost. |
-| **Anthropic** | claude-3-5-haiku | $0.80 | $4.00 | ✅ | Fast, cheap. Good for validation. |
-| **Anthropic** | claude-3-5-sonnet | $3.00 | $15.00 | ✅ | Best quality. Use for complex tasks. |
-| **Grok** | grok-beta | $5.00 | $15.00 | ✅ | OpenAI-compatible API. |
-| **Ollama** | any local | $0 | $0 | ✅ | CPU-only. Slow but free. |
+| **DeepSeek** | `deepseek-flash` | $0.15 (off-peak)<br>$0.30 (peak) | $0.60 (off-peak)<br>$1.20 (peak) | ⚠️ Check compliance | Cheapest. Default for development. Supports JSON mode. |
+| **DeepSeek** | `deepseek-v4-pro` | $0.66 (off-peak)<br>$1.32 (peak) | $1.98 (off-peak)<br>$3.96 (peak) | ⚠️ Check compliance | Higher quality, no vision. |
+| **OpenAI** | `gpt-4o-mini` | $0.15 | $0.60 | ✅ | Wide availability. |
+| **Anthropic** | `claude-haiku-5-5` | $0.10 | $0.50 | ✅ | Fast, cheap. Good for validation. |
+| **Anthropic** | `claude-sonnet-5-5` | $2.00 | $10.00 | ✅ | Best balance of speed/intelligence. |
+| **Grok** | `grok-4.3` | $1.25 | $2.50 | ✅ | OpenAI-compatible API. |
+| **Grok** | `grok-4.7` | $2.00 | $6.00 | ✅ | Higher quality. |
+| **Ollama** | local (e.g. `qwen3`) | $0 | $0 | ✅ | CPU-only. Slow but free. |
 
-Prices are indicative (2025-03) and model names change often. Check each
+> **Note on DeepSeek cache pricing:** Cached input tokens are drastically 
+> cheaper (e.g., $0.003/1M for `deepseek-flash` off-peak). The agent logs 
+> cache hits to help you monitor this.
+
+Prices are indicative (2026-06) and model names change often. Check each
 provider's documentation for current models and rates.
 
 ---
@@ -57,9 +65,9 @@ The override is written to `key.json` and persists for subsequent runs.
 
 ## Why DeepSeek is the default
 
-DeepSeek is the cheapest provider ($0.14/1M input tokens vs $0.15 for
-gpt-4o-mini) and has strong prompt caching. For development with a tight
-API budget, it is the pragmatic choice.
+DeepSeek is the cheapest provider for the kind of traffic this agent
+generates (short HTML-reduced prompts) and has strong automatic prompt
+caching. For development with a tight API budget, it is the pragmatic choice.
 
 **Note for EU users**: before using DeepSeek for professional work, check
 your GDPR and data-residency obligations. If they are a problem, use OpenAI,
@@ -73,24 +81,32 @@ limitation — the code is identical.
 1. Create `llm/myprovider.py`:
 
 ```python
-from llm.base import BaseLLMClient, LLMError, LLMResponse
+from llm.base import BaseLLMClient, LLMConfigError, RawCompletion
 
 class MyProviderClient(BaseLLMClient):
     provider_name = "myprovider"
+    DEFAULT_URL = "https://api.myprovider.com/v1/chat"
+    DEFAULT_MODEL = "myprovider-mini"
+    PRICE_IN_PER_M = 0.10   # Optional: set to enable cost estimation
+    PRICE_OUT_PER_M = 0.30
 
     def __init__(self, config, auto_confirm=False):
+        super().__init__(config, auto_confirm)
         self.api_key = config.get("MYPROVIDER_API_KEY", "")
-        # ...
+        if not self.api_key:
+            raise LLMConfigError("MYPROVIDER_API_KEY missing in key.json")
+        self.api_url = config.get("MYPROVIDER_API_URL", self.DEFAULT_URL)
+        self.model = config.get("MYPROVIDER_MODEL", self.DEFAULT_MODEL)
 
-    def plan_next_step(self, html, goal, history, previous_error=None):
-        # Build request, call API, parse JSON
-        return LLMResponse(
-            data=parsed_plan,
-            input_tokens=...,
-            output_tokens=...,
-            cache_hit_tokens=...,
-            provider=self.provider_name,
-            model=self.model,
+    def _complete(self, system: str, user: str, max_tokens: int) -> RawCompletion:
+        # 1. Build the payload (e.g., OpenAI-compatible format)
+        # 2. POST to self.api_url
+        # 3. Parse the JSON response
+        return RawCompletion(
+            text=extracted_text,
+            input_tokens=usage["prompt_tokens"],
+            output_tokens=usage["completion_tokens"],
+            finish_reason=choice["finish_reason"],
         )
 ```
 
