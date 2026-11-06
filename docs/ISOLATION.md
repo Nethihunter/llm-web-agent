@@ -57,10 +57,16 @@ iterations, use local Chrome. For long runs, use the container.
 ## Implementation
 
 - `browser/container_manager.py` — lifecycle (build, start, stop, health)
-- `browser/Dockerfile.browser` — minimal Chrome image (no VPN, no VNC)
-- `browser/start-chrome.sh` — Xvfb + Chrome with CDP
+- `browser/Dockerfile.browser` — Chrome + Xvfb (virtual display) + noVNC (live view)
+- `browser/start-chrome.sh` — Xvfb + Fluxbox + x11vnc + socat + Chrome with CDP
 
-Total: ~150 lines of Python + ~50 lines of Docker config.
+
+## Why is there a VNC / noVNC server?
+When the LLM goes off the rails (which happens), a human needs to see
+what is actually happening on the screen. Headless Chrome hides
+everything. This image exposes a live VNC stream on http://localhost:6080
+(noVNC) so the operator can watch the browser and take over if needed.
+
 
 ## When to use each mode
 
